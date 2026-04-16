@@ -1,26 +1,26 @@
 ####
-# This Dockerfile is used in order to build a container that runs the Quarkus application in JVM mode
+# This Containerfile builds a container that runs the Quarkus application in JVM mode.
 #
 # Before building the container image run:
 #
 # ./mvnw package
 #
-# Then, build the image with:
+# Then, build the image with (from this directory):
 #
-# docker build -f src/main/docker/Containerfile -t quarkus/api-account-jvm .
+# podman build -f Containerfile -t quarkus/api-account-jvm .
 #
 # Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/api-account-jvm
+# podman run -i --rm -p 8080:8080 quarkus/api-account-jvm
 #
-# If you want to include the debug port into your docker image
+# If you want to include the debug port into your container image
 # you will have to expose the debug port (default 5005 being the default) like this :  EXPOSE 8080 5005.
 # Additionally you will have to set -e JAVA_DEBUG=true and -e JAVA_DEBUG_PORT=*:5005
 # when running the container
 #
-# Then run the container using :
+# Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/api-account-jvm
+# podman run -i --rm -p 8080:8080 quarkus/api-account-jvm
 #
 # This image uses the `run-java.sh` script to run the application.
 # This scripts computes the command line to execute your Java application, and
