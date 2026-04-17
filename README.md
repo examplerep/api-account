@@ -1,76 +1,79 @@
 # api-account
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Quarkus REST API for account-related data (customers, and more to come).
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+## Configuration
 
-## Running the application in dev mode
+Main configuration lives in `src/main/resources/application.yaml` (profiles: `%dev`, `%test`, `%prod`).
 
-You can run your application in dev mode that enables live coding using:
+- **Development**: Dev Services starts PostgreSQL; Flyway runs migrations plus `db/testdata` (see Flyway below). HTTP Basic auth is enabled with embedded user `dev` / `dev` and roles `CUSTOMER_READ`, `CUSTOMER_WRITE`.
+- **Tests**: Same Flyway locations as dev; HTTP Basic is off and `io.quarkus.test.security.TestSecurity` supplies roles.
+- **Production**: Set `DB_USERNAME`, `DB_PASSWORD`, and optionally `DB_HOST`, `DB_PORT`, `DB_NAME`. Only `db/migration` is used (no test data). Configure OIDC or another identity provider for real deployments; role names should align with `CUSTOMER_READ` / `CUSTOMER_WRITE`.
 
-```shell script
+## Database and Flyway
+
+- Schema scripts: `src/main/resources/db/migration/`
+- Dev/test-only data: `src/main/resources/db/testdata/` (e.g. `V999__testdata.sql`)
+
+Tables: `customer` (`customer_type` as `SMALLINT`: `1` = BUSINESS, `2` = INDIVIDUAL), `customer_individual` (person fields), `customer_business` (business fields).
+
+**Customer IDs** are allocated from PostgreSQL sequences `customer_business_id_seq` (starts at `1000000000000000000`) and `customer_individual_id_seq` (starts at `2000000000000000000`), each incrementing by 1. Use the single function `next_customer_id(customer_type)`:
+
+- `'BUSINESS'` → `nextval('customer_business_id_seq')`
+- `'INDIVIDUAL'` → `nextval('customer_individual_id_seq')`
+
+Call `next_customer_id(...)` from SQL or JDBC in the same transaction as inserts into `customer` (and related child rows).
+
+### Hibernate / Panache (repository)
+
+- Package: `com.examplerep.account.repository`
+- Entities: `CustomerEntity`, `CustomerIndividualEntity`, `CustomerBusinessEntity` (maps to `customer`, `customer_individual`, `customer_business`)
+- `CustomerRepository` (`PanacheRepository<CustomerEntity>`): `nextCustomerId(CustomerType)`, `persistCustomer`, `findByIdWithDetails`, `findAllWithDetails`
+- `CustomerTypeConverter`: maps enum `CustomerType` ↔ `SMALLINT` (1 = BUSINESS, 2 = INDIVIDUAL)
+
+## Customers API
+
+Base path: `/customers`
+
+| Method | Path | Roles |
+|--------|------|--------|
+| GET | `/customers` | `CUSTOMER_READ` |
+| POST | `/customers` | `CUSTOMER_WRITE` |
+| GET | `/customers/{customerId}` | `CUSTOMER_READ` |
+| PUT | `/customers/{customerId}` | `CUSTOMER_WRITE` |
+| DELETE | `/customers/{customerId}` | `CUSTOMER_WRITE` |
+
+**Create body** (`CreateCustomerRequest`): set `customerType` to `INDIVIDUAL` or `BUSINESS` and include exactly one of `individual` or `business`:
+
+- `INDIVIDUAL`: `individual` with `firstName`, `lastName`, optional `email`
+- `BUSINESS`: `business` with `legalName`
+
+**Update body** (`UpdateCustomerRequest`): send the payload that matches the existing customer type (`individual` or `business` only).
+
+OpenAPI document: `/openapi` (Swagger UI: `/q/swagger-ui` when enabled).
+
+## Running
+
+```shell
 ./mvnw quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+Packaging:
 
-## Packaging and running the application
-
-The application can be packaged using:
-
-```shell script
+```shell
 ./mvnw package
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+Native (optional):
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
-```
-
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
-
-## Creating a native executable
-
-You can create a native executable using:
-
-```shell script
+```shell
 ./mvnw package -Dnative
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
-
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./target/api-account-1.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
-
 ## Related Guides
 
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus
-  REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
-- YAML Configuration ([guide](https://quarkus.io/guides/config-yaml)): Use YAML to configure your Quarkus application
-
-## Provided Code
-
-### YAML Config
-
-Configure your application with YAML
-
-[Related guide section...](https://quarkus.io/guides/config-reference#configuration-examples)
-
-The Quarkus application configuration is located in `src/main/resources/application.yml`.
-
-### REST
-
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+- REST Jackson: <https://quarkus.io/guides/rest#json-serialisation>
+- YAML Configuration: <https://quarkus.io/guides/config-yaml>
+- Hibernate ORM with Panache: <https://quarkus.io/guides/hibernate-orm-panache>
+- Flyway: <https://quarkus.io/guides/flyway>
+- OpenAPI: <https://quarkus.io/guides/openapi-swaggerui>

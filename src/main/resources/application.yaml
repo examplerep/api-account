@@ -1,2 +1,61 @@
-greeting:
-  message: "hello"
+quarkus:
+  application:
+    name: api-account
+  banner:
+    enabled: false
+  datasource:
+    db-kind: postgresql
+  flyway:
+    migrate-at-start: true
+    locations: db/migration
+  hibernate-orm:
+    schema-management:
+      strategy: none
+  smallrye-openapi:
+    path: /openapi
+  swagger-ui:
+    always-include: true
+  http:
+    auth:
+      basic: false
+
+"%dev":
+  quarkus:
+    datasource:
+      devservices:
+        enabled: true
+    flyway:
+      locations: db/migration,db/testdata
+    http:
+      auth:
+        basic: true
+    security:
+      users:
+        embedded:
+          enabled: true
+          plain-text: true
+          users:
+            dev:
+              password: dev
+              roles: CUSTOMER_READ,CUSTOMER_WRITE
+
+"%test":
+  quarkus:
+    datasource:
+      devservices:
+        enabled: true
+    flyway:
+      locations: db/migration,db/testdata
+    http:
+      auth:
+        basic: false
+
+"%prod":
+  quarkus:
+    flyway:
+      locations: db/migration
+    datasource:
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
+      jdbc:
+        url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:api_account}
