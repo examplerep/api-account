@@ -31,6 +31,13 @@ Call `next_customer_id(...)` from SQL or JDBC in the same transaction as inserts
 - `CustomerRepository` (`PanacheRepository<CustomerEntity>`): `nextCustomerId(CustomerType)`, `persistCustomer`, `findByIdWithDetails`, `findAllWithDetails`
 - `CustomerTypeConverter`: maps enum `CustomerType` ↔ `SMALLINT` (1 = BUSINESS, 2 = INDIVIDUAL)
 
+### Service layer
+
+- Package: `com.examplerep.account.service`
+- Domain: `Customer` (id, type, **`name`**, timestamps), `CustomerIndividual`, `CustomerBusiness` (input payloads for create/update)
+- **`Customer.name`**: BUSINESS → `legal_name`; INDIVIDUAL → `firstName + " " + lastName`, and if `suffix` is non-blank → `", " + suffix` (e.g. `Jane Doe, Jr`)
+- `CustomerService`: `listCustomers`, `findCustomer`, `create` (overloaded: `CustomerIndividual` / `CustomerBusiness`), `update` (overloaded by payload type), `delete` — uses `CustomerRepository`, maps entities ↔ domain, `@Valid` on inputs, `NotFoundException` / `BadRequestException` where appropriate
+
 ## Customers API
 
 Base path: `/customers`

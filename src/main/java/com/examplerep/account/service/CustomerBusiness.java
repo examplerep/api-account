@@ -1,4 +1,5 @@
 package com.examplerep.account.service;
 
-public record CustomerBusiness(Long customerId, String legalName) {
-}
+import jakarta.validation.constraints.NotBlank;
+
+public record CustomerBusiness(Long customerId, @NotBlank(message = "{customer.business.legalName.notBlank}") String legalName) {}
