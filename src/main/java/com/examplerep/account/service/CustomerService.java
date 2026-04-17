@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +30,11 @@ public class CustomerService {
     @Transactional
     public Optional<Customer> findCustomer(Long customerId) {
         return customerRepository.findByIdWithDetails(customerId).map(this::toDomain);
+    }
+
+    @Transactional
+    public Optional<CustomerDetail> findCustomerDetail(Long customerId) {
+        return customerRepository.findByIdWithDetails(customerId).map(this::toDetail);
     }
 
     @Transactional
@@ -126,6 +132,25 @@ public class CustomerService {
                 resolveDisplayName(entity),
                 entity.createdAt,
                 entity.updatedAt);
+    }
+
+    private CustomerDetail toDetail(CustomerEntity entity) {
+        Customer summary = toDomain(entity);
+        if (entity.customerType == CustomerType.INDIVIDUAL && entity.individual != null) {
+            return new CustomerDetail(summary, toIndividual(entity.individual), null);
+        }
+        if (entity.customerType == CustomerType.BUSINESS && entity.business != null) {
+            return new CustomerDetail(summary, null, toBusiness(entity.business));
+        }
+        return new CustomerDetail(summary, null, null);
+    }
+
+    private static CustomerIndividual toIndividual(CustomerIndividualEntity ind) {
+        return new CustomerIndividual(ind.customerId, ind.firstName, ind.middleName, ind.lastName, ind.suffix);
+    }
+
+    private static CustomerBusiness toBusiness(CustomerBusinessEntity bus) {
+        return new CustomerBusiness(bus.customerId, bus.legalName);
     }
 
     /**

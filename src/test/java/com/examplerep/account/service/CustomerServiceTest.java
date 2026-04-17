@@ -12,10 +12,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -55,12 +52,23 @@ class CustomerServiceTest {
     @Test
     @Order(4)
     @Transactional
+    void findCustomerDetail_seedIndividual_hasIndividualBlock() {
+        CustomerDetail d = customerService.findCustomerDetail(SEED_INDIVIDUAL_ID).orElseThrow();
+        assertEquals("Test Individual", d.customer().name());
+        assertEquals("Test", d.individual().firstName());
+        assertEquals("Individual", d.individual().lastName());
+        assertNull(d.business());
+    }
+
+    @Test
+    @Order(5)
+    @Transactional
     void findCustomer_missing_returnsEmpty() {
         assertTrue(customerService.findCustomer(999L).isEmpty());
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     @Transactional
     void createIndividual_and_createBusiness_thenDelete() {
         Customer ind =
@@ -79,7 +87,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     @Transactional
     void createIndividual_withSuffix_nameIncludesCommaSuffix() {
         Customer c =
@@ -90,7 +98,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     @Transactional
     void updateIndividual_updatesCreatedCustomer() {
         Customer created =
@@ -106,7 +114,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     @Transactional
     void updateBusiness_updatesCreatedCustomer() {
         Customer created =
@@ -120,7 +128,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     @Transactional
     void updateIndividual_onBusinessCustomer_throwsBadRequest() {
         assertThrows(
@@ -132,7 +140,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    @Order(10)
+    @Order(11)
     @Transactional
     void updateBusiness_onIndividualCustomer_throwsBadRequest() {
         assertThrows(
@@ -143,7 +151,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    @Order(11)
+    @Order(12)
     @Transactional
     void updateIndividual_notFound_throws() {
         assertThrows(
@@ -154,14 +162,14 @@ class CustomerServiceTest {
     }
 
     @Test
-    @Order(12)
+    @Order(13)
     @Transactional
     void deleteCustomer_unknown_returnsFalse() {
         assertFalse(customerService.delete(1L));
     }
 
     @Test
-    @Order(13)
+    @Order(14)
     @Transactional
     void createIndividual_blankFirstName_failsValidation() {
         assertThrows(

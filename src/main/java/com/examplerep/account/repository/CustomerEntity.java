@@ -1,14 +1,9 @@
 package com.examplerep.account.repository;
 
 import com.examplerep.account.CustomerType;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.Valid;
+
 import java.time.Instant;
 import java.util.Objects;
 

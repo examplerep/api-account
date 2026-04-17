@@ -1,3 +1,6 @@
+# Keycloak (or any OIDC provider): bearer access tokens verified via realm discovery (JWKS).
+# Set KEYCLOAK_SERVER_URL to your Keycloak base (no trailing slash), e.g. http://localhost:8180
+# Set KEYCLOAK_REALM and KEYCLOAK_CLIENT_ID to match your realm and client.
 quarkus:
   application:
     name: api-account
@@ -18,6 +21,13 @@ quarkus:
   http:
     auth:
       basic: false
+  oidc:
+    application-type: service
+    auth-server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8180}/realms/${KEYCLOAK_REALM:api-account}
+    client-id: ${KEYCLOAK_CLIENT_ID:api-account}
+    # Keycloak realm roles are read from realm_access.roles by default; use groups if you map roles there:
+    # roles:
+    #   role-claim-path: groups
 
 "%dev":
   quarkus:
@@ -28,16 +38,7 @@ quarkus:
       locations: db/migration,db/testdata
     http:
       auth:
-        basic: true
-    security:
-      users:
-        embedded:
-          enabled: true
-          plain-text: true
-          users:
-            dev:
-              password: dev
-              roles: CUSTOMER_READ,CUSTOMER_WRITE
+        basic: false
 
 "%test":
   quarkus:
@@ -49,6 +50,9 @@ quarkus:
     http:
       auth:
         basic: false
+    # No Keycloak required for unit tests; RBAC is exercised via @TestSecurity.
+    oidc:
+      enabled: false
 
 "%prod":
   quarkus:
